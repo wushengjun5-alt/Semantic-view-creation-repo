@@ -271,7 +271,7 @@ def test_connection(account: str, user: str, password: str = '', warehouse: str 
         # Add authentication method
         if authenticator == 'externalbrowser':
             conn_params['authenticator'] = 'externalbrowser'
-        else:
+        elif password:  # Only add password if it's not empty
             conn_params['password'] = password
 
         if warehouse:
