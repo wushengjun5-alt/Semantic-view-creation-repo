@@ -271,6 +271,8 @@ def test_connection(account: str, user: str, password: str = '', warehouse: str 
         # Add authentication method
         if authenticator == 'externalbrowser':
             conn_params['authenticator'] = 'externalbrowser'
+            print(f"DEBUG: Using OAuth/SSO with account={account}, user={user}")
+            st.info("Opening browser for authentication... Please check your browser!")
         elif password:  # Only add password if it's not empty
             conn_params['password'] = password
 
@@ -283,9 +285,14 @@ def test_connection(account: str, user: str, password: str = '', warehouse: str 
         if role:
             conn_params['role'] = role
 
+        # Debug: print what we're sending
+        debug_params = {k: v for k, v in conn_params.items() if k != 'password'}
+        print(f"DEBUG: Connection parameters: {debug_params}")
+
         conn = snowflake.connector.connect(**conn_params)
         conn.close()
         return True
     except Exception as e:
+        print(f"DEBUG: Connection failed with error: {str(e)}")
         st.error(f"Connection test failed: {str(e)}")
         return False
