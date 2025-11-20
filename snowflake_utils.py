@@ -51,7 +51,7 @@ def get_snowflake_connection():
             # Check authentication method
             if creds.get('authenticator') == 'externalbrowser':
                 conn_params['authenticator'] = 'externalbrowser'
-            else:
+            elif creds.get('password'):
                 conn_params['password'] = creds['password']
 
             # Add optional parameters
@@ -113,7 +113,7 @@ def get_snowpark_session():
             # Check authentication method
             if creds.get('authenticator') == 'externalbrowser':
                 connection_parameters['authenticator'] = 'externalbrowser'
-            else:
+            elif creds.get('password'):
                 connection_parameters['password'] = creds['password']
 
             # Add optional parameters

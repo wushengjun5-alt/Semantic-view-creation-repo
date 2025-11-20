@@ -120,16 +120,19 @@ def render_connection_sidebar():
                         with st.spinner("Connecting to Snowflake..." +
                                       (" Opening browser for OAuth/SSO login..." if auth_method == 'OAuth/SSO' else "")):
                             if test_connection(account, user, password, warehouse, database, schema, role, authenticator):
+                                # Build credentials dict
                                 st.session_state.snowflake_credentials = {
                                     'account': account,
                                     'user': user,
-                                    'password': password,
                                     'warehouse': warehouse,
                                     'database': database,
                                     'schema': schema,
                                     'role': role,
                                     'authenticator': authenticator
                                 }
+                                # Only add password if it's not empty (OAuth/SSO doesn't need it)
+                                if password:
+                                    st.session_state.snowflake_credentials['password'] = password
                                 st.session_state.connected = True
                                 st.success("✅ Connected successfully!")
                                 st.rerun()
