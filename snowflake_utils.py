@@ -26,7 +26,7 @@ def get_snowflake_connection():
             auth_method = st.secrets['snowflake'].get('authenticator', 'password')
             if auth_method == 'externalbrowser':
                 conn_params['authenticator'] = 'externalbrowser'
-            else:
+            elif 'password' in st.secrets['snowflake']:
                 conn_params['password'] = st.secrets['snowflake']['password']
 
             # Add optional parameters
@@ -90,7 +90,7 @@ def get_snowpark_session():
             auth_method = st.secrets['snowflake'].get('authenticator', 'password')
             if auth_method == 'externalbrowser':
                 connection_parameters['authenticator'] = 'externalbrowser'
-            else:
+            elif 'password' in st.secrets['snowflake']:
                 connection_parameters['password'] = st.secrets['snowflake']['password']
 
             # Add optional parameters
