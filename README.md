@@ -101,8 +101,10 @@ streamlit run app.py
      - You can paste the full URL: `te8232002.north-europe.azure.snowflakecomputing.com`
      - Or just the account: `te8232002.north-europe.azure`
      - The app will automatically extract the correct format
-   - Enter your **User** (email)
-   - Optionally set **Role** (e.g., `PRD_VISUALISER`)
+   - Enter your **User** (email/username):
+     - This identifies your Snowflake account for the OAuth flow
+     - Your organization's SSO will verify your identity in the browser
+   - Optionally expand **Advanced Settings** to set Role, Warehouse, etc.
    - Click **"Sign In"**
    - A browser window will open for OAuth authentication
    - Sign in with your company credentials

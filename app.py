@@ -90,7 +90,14 @@ def render_connection_sidebar():
                 if account != server_or_account.strip():
                     st.caption(f"Using account: `{account}`")
 
-                user = st.text_input("User", help="Your email or username")
+                if auth_method == 'OAuth/SSO':
+                    user = st.text_input(
+                        "User",
+                        placeholder="your.email@company.com",
+                        help="Your Snowflake username (used to identify your account during SSO)"
+                    )
+                else:
+                    user = st.text_input("User", help="Your email or username")
 
                 # Only show password field if not using SSO
                 password = ""
