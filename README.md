@@ -40,27 +40,29 @@ pip install -r requirements.txt
 
 ## Configuration
 
-### Option 1: Azure SSO Authentication (Recommended for Enterprise)
+### Option 1: OAuth/SSO Authentication (Recommended for Enterprise)
 
-For organizations using Azure Active Directory/Entra ID with Snowflake, you can use browser-based SSO:
+For organizations using OAuth/SSO with Snowflake (like "Sign in using OAuth" in other tools), you can use browser-based authentication:
 
 Create a `.streamlit/secrets.toml` file:
 
 ```toml
 [snowflake]
-account = "your-account-identifier"  # e.g., "xy12345.east-us-2.azure"
+# Extract account from your Snowflake URL
+# Example: te8232002.north-europe.azure.snowflakecomputing.com → te8232002.north-europe.azure
+account = "te8232002.north-europe.azure"
 user = "your-email@company.com"
-authenticator = "externalbrowser"
-warehouse = "your-warehouse"  # Optional
-database = "your-database"    # Optional
-schema = "your-schema"        # Optional
-role = "your-role"            # Optional
+authenticator = "externalbrowser"  # Enables OAuth/SSO
+role = "PRD_VISUALISER"            # Optional
+warehouse = "your-warehouse"       # Optional
+database = "your-database"         # Optional
+schema = "your-schema"             # Optional
 ```
 
 **Benefits:**
 - ✅ No password required - uses your company's SSO
 - ✅ Multi-factor authentication supported
-- ✅ Automatically uses your existing Azure session
+- ✅ Same authentication method as other Snowflake tools
 - ✅ More secure - no credentials stored
 
 ### Option 2: Password Authentication (Traditional)
@@ -81,9 +83,9 @@ role = "your-role"
 ### Option 3: In-App Configuration (Interactive)
 
 Launch the app and enter your credentials in the sidebar connection form:
-- Choose "Azure SSO" or "Password" authentication
-- Enter your account and user details
-- For Azure SSO: A browser window will open for authentication
+- Choose "OAuth/SSO" or "Password" authentication
+- Enter your server URL or account identifier
+- For OAuth/SSO: A browser window will open for authentication (same as "Sign in using OAuth")
 - For Password: Enter your password in the form
 
 ## Usage
@@ -93,11 +95,18 @@ Launch the app and enter your credentials in the sidebar connection form:
 streamlit run app.py
 ```
 
-2. Connect to Snowflake:
-   - Use the sidebar to select authentication method (Azure SSO or Password)
-   - Enter your Snowflake account identifier and user
-   - For **Azure SSO**: Click "Connect" and a browser window will open for authentication
-   - For **Password**: Enter your password and click "Connect"
+2. Connect to Snowflake with OAuth/SSO:
+   - Select "OAuth/SSO" authentication method
+   - Enter your **Server or Account**:
+     - You can paste the full URL: `te8232002.north-europe.azure.snowflakecomputing.com`
+     - Or just the account: `te8232002.north-europe.azure`
+     - The app will automatically extract the correct format
+   - Enter your **User** (email)
+   - Optionally set **Role** (e.g., `PRD_VISUALISER`)
+   - Click **"Sign In"**
+   - A browser window will open for OAuth authentication
+   - Sign in with your company credentials
+   - Return to the app - you'll be connected!
 
 3. Create a Semantic View:
    - Navigate to the "Create New View" tab
