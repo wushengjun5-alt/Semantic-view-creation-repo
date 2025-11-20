@@ -6,6 +6,12 @@ import streamlit as st
 import json
 from datetime import datetime
 import pandas as pd
+import warnings
+import logging
+
+# Suppress ScriptRunContext warnings
+warnings.filterwarnings('ignore', message='.*ScriptRunContext.*')
+logging.getLogger('streamlit.runtime.scriptrunner_utils.script_run_context').setLevel(logging.ERROR)
 
 # Import custom modules
 from snowflake_utils import (
