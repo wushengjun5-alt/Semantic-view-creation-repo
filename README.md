@@ -40,7 +40,30 @@ pip install -r requirements.txt
 
 ## Configuration
 
-### Option 1: Using Streamlit Secrets (Recommended for production)
+### Option 1: Azure SSO Authentication (Recommended for Enterprise)
+
+For organizations using Azure Active Directory/Entra ID with Snowflake, you can use browser-based SSO:
+
+Create a `.streamlit/secrets.toml` file:
+
+```toml
+[snowflake]
+account = "your-account-identifier"  # e.g., "xy12345.east-us-2.azure"
+user = "your-email@company.com"
+authenticator = "externalbrowser"
+warehouse = "your-warehouse"  # Optional
+database = "your-database"    # Optional
+schema = "your-schema"        # Optional
+role = "your-role"            # Optional
+```
+
+**Benefits:**
+- ✅ No password required - uses your company's SSO
+- ✅ Multi-factor authentication supported
+- ✅ Automatically uses your existing Azure session
+- ✅ More secure - no credentials stored
+
+### Option 2: Password Authentication (Traditional)
 
 Create a `.streamlit/secrets.toml` file:
 
@@ -55,9 +78,13 @@ schema = "your-schema"
 role = "your-role"
 ```
 
-### Option 2: In-App Configuration (Recommended for development)
+### Option 3: In-App Configuration (Interactive)
 
-Launch the app and enter your credentials in the sidebar connection form.
+Launch the app and enter your credentials in the sidebar connection form:
+- Choose "Azure SSO" or "Password" authentication
+- Enter your account and user details
+- For Azure SSO: A browser window will open for authentication
+- For Password: Enter your password in the form
 
 ## Usage
 
@@ -67,8 +94,10 @@ streamlit run app.py
 ```
 
 2. Connect to Snowflake:
-   - Use the sidebar to enter your Snowflake credentials
-   - Click "Connect" to establish the connection
+   - Use the sidebar to select authentication method (Azure SSO or Password)
+   - Enter your Snowflake account identifier and user
+   - For **Azure SSO**: Click "Connect" and a browser window will open for authentication
+   - For **Password**: Enter your password and click "Connect"
 
 3. Create a Semantic View:
    - Navigate to the "Create New View" tab

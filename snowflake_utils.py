@@ -12,30 +12,59 @@ from typing import List, Dict, Any, Optional
 def get_snowflake_connection():
     """
     Create Snowflake connection using credentials from Streamlit secrets or session state.
+    Supports both password and Azure SSO authentication.
     """
     try:
         # Try to get credentials from Streamlit secrets first
         if hasattr(st, 'secrets') and 'snowflake' in st.secrets:
-            conn = snowflake.connector.connect(
-                account=st.secrets['snowflake']['account'],
-                user=st.secrets['snowflake']['user'],
-                password=st.secrets['snowflake']['password'],
-                warehouse=st.secrets['snowflake'].get('warehouse', ''),
-                database=st.secrets['snowflake'].get('database', ''),
-                schema=st.secrets['snowflake'].get('schema', ''),
-                role=st.secrets['snowflake'].get('role', '')
-            )
+            conn_params = {
+                'account': st.secrets['snowflake']['account'],
+                'user': st.secrets['snowflake']['user'],
+            }
+
+            # Check authentication method
+            auth_method = st.secrets['snowflake'].get('authenticator', 'password')
+            if auth_method == 'externalbrowser':
+                conn_params['authenticator'] = 'externalbrowser'
+            else:
+                conn_params['password'] = st.secrets['snowflake']['password']
+
+            # Add optional parameters
+            if st.secrets['snowflake'].get('warehouse'):
+                conn_params['warehouse'] = st.secrets['snowflake']['warehouse']
+            if st.secrets['snowflake'].get('database'):
+                conn_params['database'] = st.secrets['snowflake']['database']
+            if st.secrets['snowflake'].get('schema'):
+                conn_params['schema'] = st.secrets['snowflake']['schema']
+            if st.secrets['snowflake'].get('role'):
+                conn_params['role'] = st.secrets['snowflake']['role']
+
+            conn = snowflake.connector.connect(**conn_params)
+
         elif 'snowflake_credentials' in st.session_state:
             creds = st.session_state['snowflake_credentials']
-            conn = snowflake.connector.connect(
-                account=creds['account'],
-                user=creds['user'],
-                password=creds['password'],
-                warehouse=creds.get('warehouse', ''),
-                database=creds.get('database', ''),
-                schema=creds.get('schema', ''),
-                role=creds.get('role', '')
-            )
+            conn_params = {
+                'account': creds['account'],
+                'user': creds['user'],
+            }
+
+            # Check authentication method
+            if creds.get('authenticator') == 'externalbrowser':
+                conn_params['authenticator'] = 'externalbrowser'
+            else:
+                conn_params['password'] = creds['password']
+
+            # Add optional parameters
+            if creds.get('warehouse'):
+                conn_params['warehouse'] = creds['warehouse']
+            if creds.get('database'):
+                conn_params['database'] = creds['database']
+            if creds.get('schema'):
+                conn_params['schema'] = creds['schema']
+            if creds.get('role'):
+                conn_params['role'] = creds['role']
+
+            conn = snowflake.connector.connect(**conn_params)
         else:
             return None
 
@@ -48,34 +77,56 @@ def get_snowflake_connection():
 def get_snowpark_session():
     """
     Create Snowpark session for Cortex AI operations.
+    Supports both password and Azure SSO authentication.
     """
     try:
         if hasattr(st, 'secrets') and 'snowflake' in st.secrets:
             connection_parameters = {
                 "account": st.secrets['snowflake']['account'],
                 "user": st.secrets['snowflake']['user'],
-                "password": st.secrets['snowflake']['password'],
-                "warehouse": st.secrets['snowflake'].get('warehouse', ''),
-                "database": st.secrets['snowflake'].get('database', ''),
-                "schema": st.secrets['snowflake'].get('schema', ''),
-                "role": st.secrets['snowflake'].get('role', '')
             }
+
+            # Check authentication method
+            auth_method = st.secrets['snowflake'].get('authenticator', 'password')
+            if auth_method == 'externalbrowser':
+                connection_parameters['authenticator'] = 'externalbrowser'
+            else:
+                connection_parameters['password'] = st.secrets['snowflake']['password']
+
+            # Add optional parameters
+            if st.secrets['snowflake'].get('warehouse'):
+                connection_parameters['warehouse'] = st.secrets['snowflake']['warehouse']
+            if st.secrets['snowflake'].get('database'):
+                connection_parameters['database'] = st.secrets['snowflake']['database']
+            if st.secrets['snowflake'].get('schema'):
+                connection_parameters['schema'] = st.secrets['snowflake']['schema']
+            if st.secrets['snowflake'].get('role'):
+                connection_parameters['role'] = st.secrets['snowflake']['role']
+
         elif 'snowflake_credentials' in st.session_state:
             creds = st.session_state['snowflake_credentials']
             connection_parameters = {
                 "account": creds['account'],
                 "user": creds['user'],
-                "password": creds['password'],
-                "warehouse": creds.get('warehouse', ''),
-                "database": creds.get('database', ''),
-                "schema": creds.get('schema', ''),
-                "role": creds.get('role', '')
             }
+
+            # Check authentication method
+            if creds.get('authenticator') == 'externalbrowser':
+                connection_parameters['authenticator'] = 'externalbrowser'
+            else:
+                connection_parameters['password'] = creds['password']
+
+            # Add optional parameters
+            if creds.get('warehouse'):
+                connection_parameters['warehouse'] = creds['warehouse']
+            if creds.get('database'):
+                connection_parameters['database'] = creds['database']
+            if creds.get('schema'):
+                connection_parameters['schema'] = creds['schema']
+            if creds.get('role'):
+                connection_parameters['role'] = creds['role']
         else:
             return None
-
-        # Remove empty parameters
-        connection_parameters = {k: v for k, v in connection_parameters.items() if v}
 
         session = Session.builder.configs(connection_parameters).create()
         return session
@@ -204,15 +255,24 @@ def get_table_stats(conn, database: str, schema: str, table: str) -> Dict[str, A
         return {}
 
 
-def test_connection(account: str, user: str, password: str, warehouse: str = '',
-                    database: str = '', schema: str = '', role: str = '') -> bool:
-    """Test Snowflake connection with provided credentials."""
+def test_connection(account: str, user: str, password: str = '', warehouse: str = '',
+                    database: str = '', schema: str = '', role: str = '',
+                    authenticator: str = 'password') -> bool:
+    """
+    Test Snowflake connection with provided credentials.
+    Supports both password and Azure SSO authentication.
+    """
     try:
         conn_params = {
             'account': account,
             'user': user,
-            'password': password
         }
+
+        # Add authentication method
+        if authenticator == 'externalbrowser':
+            conn_params['authenticator'] = 'externalbrowser'
+        else:
+            conn_params['password'] = password
 
         if warehouse:
             conn_params['warehouse'] = warehouse

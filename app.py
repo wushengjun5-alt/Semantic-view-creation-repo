@@ -62,20 +62,48 @@ def render_connection_sidebar():
 
         if not st.session_state.connected:
             with st.form("connection_form"):
-                account = st.text_input("Account", help="Your Snowflake account identifier")
-                user = st.text_input("User")
-                password = st.text_input("Password", type="password")
+                st.markdown("### Authentication")
+
+                auth_method = st.radio(
+                    "Authentication Method",
+                    options=['Azure SSO', 'Password'],
+                    help="Choose Azure SSO for browser-based authentication"
+                )
+
+                st.markdown("### Connection Details")
+                account = st.text_input(
+                    "Account",
+                    help="Your Snowflake account identifier (e.g., xy12345.east-us-2.azure)"
+                )
+                user = st.text_input("User", help="Your email or username")
+
+                # Only show password field if not using SSO
+                password = ""
+                if auth_method == 'Password':
+                    password = st.text_input("Password", type="password")
+                else:
+                    st.info("🔐 Browser window will open for Azure SSO login")
+
+                st.markdown("### Optional Parameters")
                 warehouse = st.text_input("Warehouse (optional)")
                 database = st.text_input("Database (optional)")
                 schema = st.text_input("Schema (optional)")
                 role = st.text_input("Role (optional)")
 
-                submit = st.form_submit_button("Connect")
+                submit = st.form_submit_button("Connect", type="primary")
 
                 if submit:
-                    if account and user and password:
-                        with st.spinner("Testing connection..."):
-                            if test_connection(account, user, password, warehouse, database, schema, role):
+                    authenticator = 'externalbrowser' if auth_method == 'Azure SSO' else 'password'
+
+                    # Validate required fields
+                    if not account or not user:
+                        st.error("Please provide account and user.")
+                    elif auth_method == 'Password' and not password:
+                        st.error("Please provide password.")
+                    else:
+                        with st.spinner("Connecting to Snowflake..." +
+                                      (" Check your browser for SSO login." if auth_method == 'Azure SSO' else "")):
+                            if test_connection(account, user, password, warehouse, database, schema, role, authenticator):
                                 st.session_state.snowflake_credentials = {
                                     'account': account,
                                     'user': user,
@@ -83,26 +111,35 @@ def render_connection_sidebar():
                                     'warehouse': warehouse,
                                     'database': database,
                                     'schema': schema,
-                                    'role': role
+                                    'role': role,
+                                    'authenticator': authenticator
                                 }
                                 st.session_state.connected = True
                                 st.success("Connected successfully!")
                                 st.rerun()
                             else:
                                 st.error("Connection failed. Please check your credentials.")
-                    else:
-                        st.error("Please provide account, user, and password.")
         else:
-            st.success("Connected to Snowflake")
+            st.success("✅ Connected to Snowflake")
             creds = st.session_state.snowflake_credentials
+
+            # Show connection info
+            st.markdown("### Connection Info")
             st.text(f"Account: {creds['account']}")
             st.text(f"User: {creds['user']}")
+
+            # Show auth method
+            if creds.get('authenticator') == 'externalbrowser':
+                st.text("Auth: Azure SSO")
+            else:
+                st.text("Auth: Password")
+
             if creds.get('warehouse'):
                 st.text(f"Warehouse: {creds['warehouse']}")
             if creds.get('database'):
                 st.text(f"Database: {creds['database']}")
 
-            if st.button("Disconnect"):
+            if st.button("Disconnect", type="secondary"):
                 st.session_state.connected = False
                 st.session_state.snowflake_credentials = None
                 st.session_state.semantic_view = None
